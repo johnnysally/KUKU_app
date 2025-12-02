@@ -122,7 +122,7 @@ class _TipsScreenState extends State<TipsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              LocalizedText('general_tips_bullets', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+              LocalizedText('general_tips_title', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)),
               const SizedBox(height: 10),
               ...generalTips.map(
                 (tip) => Card(
