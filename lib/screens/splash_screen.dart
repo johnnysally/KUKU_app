@@ -4,6 +4,7 @@ import 'onboarding_screen.dart';
 import 'dashboard_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/colors.dart';
+import '../widgets/localized_text.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,8 +48,8 @@ class _SplashScreenState extends State<SplashScreen> {
               color: AppColors.primary,
             ),
             const SizedBox(height: 20),
-            Text(
-              'Welcome to Poultry App',
+            LocalizedText(
+              'welcome_app',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 28,
@@ -57,8 +58,8 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            Text(
-              'Manage your farm efficiently',
+            LocalizedText(
+              'manage_short',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,

@@ -6,6 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
 import '../theme/colors.dart';
 import '../services/api_config.dart';
+import '../widgets/ai_response_card.dart';
+import '../widgets/localized_text.dart';
+import '../services/locale_service.dart';
 
 class FeedManagementScreen extends StatefulWidget {
   const FeedManagementScreen({super.key});
@@ -73,14 +76,14 @@ class _FeedManagementScreenState extends State<FeedManagementScreen> {
         selectedFeedType == null ||
         flockSizeController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select flock, feed type, and enter flock size')),
+        SnackBar(content: Text(LocaleService.instance.t('please_select_flock_feedtype_size'))),
       );
       return;
     }
 
     if (ApiConfig.apiKey.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('API key missing! Run with --dart-define=GROQ_API_KEY=...')),
+        SnackBar(content: Text(LocaleService.instance.t('api_key_missing'))),
       );
       return;
     }
@@ -114,7 +117,7 @@ Use easy English for small-scale farmers.
       if (ApiConfig.isDefaultModelDecommissioned()) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Configured model is deprecated — using fallback model.')),
+            SnackBar(content: Text(LocaleService.instance.t('model_deprecated_msg'))),
           );
         }
       }
@@ -152,7 +155,7 @@ Use easy English for small-scale farmers.
       }
     } catch (e) {
       setState(() {
-        _generatedProgram = "No internet or server error.\nPlease try again.";
+        _generatedProgram = LocaleService.instance.t('ai_feeding_program');
       });
     } finally {
       setState(() => _isGenerating = false); // Fixed: removed invalid if()
@@ -165,7 +168,7 @@ Use easy English for small-scale farmers.
 
     if (size <= 0 || weight <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid flock size and average weight')),
+        SnackBar(content: Text(LocaleService.instance.t('please_enter_valid_flock_size_weight'))),
       );
       return;
     }
@@ -205,7 +208,7 @@ Quick Feed Estimate:
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feeding program saved!')),
+        SnackBar(content: Text(LocaleService.instance.t('feeding_program_saved'))),
       );
     }
   }
@@ -214,7 +217,7 @@ Quick Feed Estimate:
     final amount = double.tryParse(stockAmountController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter valid stock amount')),
+        SnackBar(content: Text(LocaleService.instance.t('enter_valid_stock_amount'))),
       );
       return;
     }
@@ -231,7 +234,7 @@ Quick Feed Estimate:
     stockAmountController.clear();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Stock recorded')),
+        SnackBar(content: Text(LocaleService.instance.t('stock_recorded'))),
       );
     }
   }
@@ -240,7 +243,7 @@ Quick Feed Estimate:
     final amount = double.tryParse(consumedController.text);
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter valid consumption')),
+        SnackBar(content: Text(LocaleService.instance.t('enter_valid_consumption'))),
       );
       return;
     }
@@ -256,7 +259,7 @@ Quick Feed Estimate:
     consumedController.clear();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Consumption recorded')),
+        SnackBar(content: Text(LocaleService.instance.t('consumption_recorded'))),
       );
     }
   }
@@ -265,7 +268,7 @@ Quick Feed Estimate:
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Feed Management", style: TextStyle(color: Colors.white)),
+        title: LocalizedText('feed_management_title', style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
@@ -275,22 +278,19 @@ Quick Feed Estimate:
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "AI Feeding Program Generator",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark),
-            ),
+            LocalizedText('ai_feeding_generator', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark)),
             const SizedBox(height: 20),
 
-            _buildDropdown("Select Flock", selectedFlock, flocks, (v) => selectedFlock = v),
+            _buildDropdown(LocaleService.instance.t('select_flock'), selectedFlock, flocks, (v) => selectedFlock = v),
             const SizedBox(height: 16),
-            _buildDropdown("Feed Type", selectedFeedType, feedTypes, (v) => selectedFeedType = v),
+            _buildDropdown(LocaleService.instance.t('feed_type'), selectedFeedType, feedTypes, (v) => selectedFeedType = v),
             const SizedBox(height: 16),
 
-            _buildTextField(flockSizeController, "Flock Size (birds)", TextInputType.number),
+            _buildTextField(flockSizeController, LocaleService.instance.t('flock_size_hint'), TextInputType.number),
             const SizedBox(height: 12),
-            _buildTextField(birdAgeController, "Bird Age (weeks)", TextInputType.number),
+            _buildTextField(birdAgeController, LocaleService.instance.t('bird_age_hint'), TextInputType.number),
             const SizedBox(height: 12),
-            _buildTextField(avgWeightController, "Average Weight (kg)", TextInputType.numberWithOptions(decimal: true)),
+            _buildTextField(avgWeightController, LocaleService.instance.t('avg_weight_hint'), TextInputType.numberWithOptions(decimal: true)),
             const SizedBox(height: 16),
 
             _buildDropdown("Production Goal", productionGoal, const [
@@ -310,7 +310,7 @@ Quick Feed Estimate:
                 icon: _isGenerating
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : const Icon(Icons.auto_awesome),
-                label: Text(_isGenerating ? "Generating..." : "Generate AI Program"),
+                label: Text(_isGenerating ? LocaleService.instance.t('generating') : LocaleService.instance.t('generate_ai_program')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -325,25 +325,25 @@ Quick Feed Estimate:
               child: OutlinedButton.icon(
                 onPressed: _calculateQuickFeed,
                 icon: const Icon(Icons.calculate_outlined),
-                label: const Text("Quick Feed Calculator"),
+                label: LocalizedText('quick_feed_calculator'),
               ),
             ),
 
             if (_calculatedFeed != null) ...[
               const SizedBox(height: 20),
-              _resultCard("Quick Calculation", _calculatedFeed!),
+              _resultCard(LocaleService.instance.t('quick_calculation'), _calculatedFeed!),
             ],
 
             if (_generatedProgram != null) ...[
               const SizedBox(height: 20),
-              _resultCard("AI Feeding Program", _generatedProgram!),
+              _resultCard(LocaleService.instance.t('ai_feeding_program'), _generatedProgram!),
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _saveGeneratedProgram,
                   icon: const Icon(Icons.save),
-                  label: const Text("Save Program"),
+                  label: LocalizedText('save_program'),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
                 ),
               ),
@@ -355,15 +355,12 @@ Quick Feed Estimate:
             Divider(color: Colors.grey[300]),
             const SizedBox(height: 20),
 
-            const Text(
-              "Record Feed Stock & Usage",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            LocalizedText('ai_feeding_generator', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
 
             const SizedBox(height: 20),
-            _buildTextField(stockAmountController, "Add New Stock (kg)", TextInputType.number),
+            _buildTextField(stockAmountController, LocaleService.instance.t('save_stock'), TextInputType.number),
             const SizedBox(height: 16),
-            _buildTextField(consumedController, "Daily Consumption (kg)", TextInputType.number),
+            _buildTextField(consumedController, LocaleService.instance.t('save_consumption'), TextInputType.number),
             const SizedBox(height: 20),
 
             GestureDetector(
@@ -399,7 +396,7 @@ Quick Feed Estimate:
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text("Save Stock", style: TextStyle(color: Colors.white)),
+                    child: LocalizedText('save_stock', style: const TextStyle(color: Colors.white)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -408,7 +405,7 @@ Quick Feed Estimate:
                     onPressed: _saveConsumption,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accent, padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: const Text("Save Consumption", style: TextStyle(color: Colors.white)),
+                    child: LocalizedText('save_consumption', style: const TextStyle(color: Colors.white)),
                   ),
                 ),
               ],
@@ -429,7 +426,7 @@ Quick Feed Estimate:
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
-          hint: Text("Choose ${label.toLowerCase()}"),
+          hint: Text(LocaleService.instance.t('choose_label', {'label': label.toLowerCase()})),
           items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
           onChanged: (v) => setState(() => onChanged(v)),
           decoration: InputDecoration(
@@ -462,27 +459,10 @@ Quick Feed Estimate:
   }
 
   Widget _resultCard(String title, String content) {
-    return Card(
-      elevation: 4,
-      color: AppColors.cardBackground,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              content,
-              style: const TextStyle(fontSize: 15.5, height: 1.6),
-            ),
-          ],
-        ),
-      ),
+    return AIResponseCard(
+      title: title,
+      content: content,
+      icon: Icons.feed,
     );
   }
 

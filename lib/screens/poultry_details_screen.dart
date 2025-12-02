@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../theme/colors.dart';
+import '../services/locale_service.dart';
+import '../widgets/localized_text.dart';
 
 class PoultryDetailsScreen extends StatefulWidget {
   const PoultryDetailsScreen({super.key});
@@ -23,17 +25,17 @@ class _PoultryDetailsScreenState extends State<PoultryDetailsScreen> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete flock'),
-        content: const Text('Are you sure you want to delete this flock?'),
+        title: Text(LocaleService.instance.t('delete_flock_title')),
+        content: Text(LocaleService.instance.t('delete_flock_confirm')),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(LocaleService.instance.t('cancel'))),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: Text(LocaleService.instance.t('delete'))),
         ],
       ),
     );
     if (yes == true) {
       await _flockBox.deleteAt(index);
-      messenger.showSnackBar(const SnackBar(content: Text('Flock deleted')));
+      messenger.showSnackBar(SnackBar(content: Text(LocaleService.instance.t('flock_deleted'))));
     }
   }
 
@@ -46,14 +48,12 @@ class _PoultryDetailsScreenState extends State<PoultryDetailsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Type: ${item['type'] ?? '-'}'),
-            Text('Count: ${item['count'] ?? '-'}'),
-            Text('Avg age (weeks): ${item['avgAgeWeeks'] ?? '-'}'),
+            Text(LocaleService.instance.t('type_label', {'value': item['type']?.toString() ?? '-'})),
+            Text(LocaleService.instance.t('count_label', {'value': item['count']?.toString() ?? '-'})),
+            Text(LocaleService.instance.t('avg_age_label', {'value': item['avgAgeWeeks']?.toString() ?? '-'})),
             const SizedBox(height: 8),
-            Text('Notes:'),
-            Text(item['notes'] ?? '-'),
-            const SizedBox(height: 8),
-            Text('Recorded: ${item['createdAt'] ?? '-'}', style: const TextStyle(fontSize: 12)),
+            Text(LocaleService.instance.t('notes_label')),
+            Text(LocaleService.instance.t('recorded_label', {'value': item['createdAt']?.toString() ?? '-'}), style: const TextStyle(fontSize: 12)),
           ],
         ),
         actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
@@ -64,7 +64,7 @@ class _PoultryDetailsScreenState extends State<PoultryDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Poultry Details'), backgroundColor: AppColors.primary),
+      appBar: AppBar(title: LocalizedText('poultry_details', style: const TextStyle(color: Colors.white)), backgroundColor: AppColors.primary),
       backgroundColor: AppColors.background,
       body: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -72,7 +72,7 @@ class _PoultryDetailsScreenState extends State<PoultryDetailsScreen> {
           valueListenable: _flockBox.listenable(),
           builder: (context, Box box, _) {
             if (box.isEmpty) {
-              return Center(child: Text('No flocks recorded yet', style: TextStyle(color: AppColors.textDark)));
+              return Center(child: LocalizedText('no_flocks_recorded', style: TextStyle(color: AppColors.textDark)));
             }
             return ListView.builder(
               itemCount: box.length,
@@ -81,7 +81,7 @@ class _PoultryDetailsScreenState extends State<PoultryDetailsScreen> {
                 return Card(
                   child: ListTile(
                     title: Text(item['name'] ?? 'Unnamed'),
-                    subtitle: Text('${item['type'] ?? '-'} • ${item['count'] ?? '-'} birds'),
+                    subtitle: Text('${item['type'] ?? '-'} • ${item['count'] ?? '-'} ${LocaleService.instance.t('birds')}'),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () => _confirmDelete(index),

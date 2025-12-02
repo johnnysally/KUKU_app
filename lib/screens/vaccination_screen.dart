@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
+import '../services/locale_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../services/notification_service.dart';
 
@@ -50,7 +51,7 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Vaccination", style: TextStyle(color: Colors.white)),
+        title: Text(LocaleService.instance.t('vaccination_title'), style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
@@ -59,14 +60,14 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Record Vaccination",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            Text(
+              LocaleService.instance.t('record_vaccination'),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
             ),
             const SizedBox(height: 30),
 
             // Select Flock
-            const Text("Select Flock", style: TextStyle(fontSize: 16, color: AppColors.textDark)),
+            Text(LocaleService.instance.t('select_flock'), style: const TextStyle(fontSize: 16, color: AppColors.textDark)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
@@ -75,14 +76,14 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
               ),
               value: selectedFlock,
-              hint: const Text("Choose flock"),
+              hint: Text(LocaleService.instance.t('choose_flock')),
               items: flocks.map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
               onChanged: (value) => setState(() => selectedFlock = value),
             ),
             const SizedBox(height: 20),
 
             // Select Vaccine
-            const Text("Select Vaccine", style: TextStyle(fontSize: 16, color: AppColors.textDark)),
+            Text(LocaleService.instance.t('select_vaccine'), style: const TextStyle(fontSize: 16, color: AppColors.textDark)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               decoration: InputDecoration(
@@ -91,14 +92,14 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
               ),
               value: selectedVaccine,
-              hint: const Text("Choose vaccine"),
+              hint: Text(LocaleService.instance.t('choose_vaccine')),
               items: vaccines.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
               onChanged: (value) => setState(() => selectedVaccine = value),
             ),
             const SizedBox(height: 20),
 
             // Vaccination Date
-            const Text("Date of Vaccination", style: TextStyle(fontSize: 16, color: AppColors.textDark)),
+            Text(LocaleService.instance.t('date_of_vaccination'), style: const TextStyle(fontSize: 16, color: AppColors.textDark)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () => pickDate(context, false),
@@ -121,7 +122,7 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
             const SizedBox(height: 20),
 
             // Next Vaccination Reminder
-            const Text("Next Vaccination Date (Optional)", style: TextStyle(fontSize: 16, color: AppColors.textDark)),
+            Text(LocaleService.instance.t('next_vaccination_optional'), style: const TextStyle(fontSize: 16, color: AppColors.textDark)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () => pickDate(context, true),
@@ -147,15 +148,15 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
             const SizedBox(height: 20),
 
             // Notes
-            const Text("Notes (Optional)", style: TextStyle(fontSize: 16, color: AppColors.textDark)),
+            Text(LocaleService.instance.t('notes_optional'), style: const TextStyle(fontSize: 16, color: AppColors.textDark)),
             const SizedBox(height: 8),
             TextField(
               controller: notesController,
               maxLines: 3,
-              decoration: InputDecoration(
+                decoration: InputDecoration(
                 filled: true,
                 fillColor: AppColors.cardBackground,
-                hintText: "Add remarks or observations",
+                hintText: LocaleService.instance.t('add_remarks'),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
               ),
             ),
@@ -173,7 +174,7 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   if (selectedFlock == null || selectedVaccine == null) {
-                    messenger.showSnackBar(const SnackBar(content: Text('Please select flock and vaccine')));
+                    messenger.showSnackBar(SnackBar(content: Text(LocaleService.instance.t('please_select_flock_and_vaccine'))));
                     return;
                   }
 
@@ -215,9 +216,9 @@ class _VaccinationScreenState extends State<VaccinationScreen> {
                     notesController.clear();
                     selectedDate = DateTime.now();
                   });
-                  messenger.showSnackBar(const SnackBar(content: Text('Vaccination saved')));
+                  messenger.showSnackBar(SnackBar(content: Text(LocaleService.instance.t('vaccination_saved'))));
                 },
-                child: const Text("Save Vaccination", style: TextStyle(color: Colors.white, fontSize: 18)),
+                child: Text(LocaleService.instance.t('save_vaccination'), style: const TextStyle(color: Colors.white, fontSize: 18)),
               ),
             ),
           ],

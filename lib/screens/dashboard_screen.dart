@@ -18,6 +18,8 @@ import 'record_flock_screen.dart';
 import 'mortality_list_screen.dart';
 import '../theme/colors.dart';
 import 'package:intl/intl.dart';
+import '../services/locale_service.dart';
+import '../widgets/localized_text.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -40,11 +42,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late final PageController _pageController;
   Timer? _autoTimer;
   int _currentPage = 0; // will be set to a random start in initState
-  // Animated welcome messages (built at runtime from profile)
+  // Animated welcome messages (built at runtime from profile via LocaleService)
   late List<String> _welcomeMessages;
   String _profileName = 'Farmer';
   int _messageIndex = 0;
   Timer? _messageTimer;
+
+  String _getDisplayName(Box profileBox) {
+    try {
+      final nameFromProfile = (profileBox.get('name') as String?) ?? '';
+      if (nameFromProfile.trim().isNotEmpty) return nameFromProfile.trim();
+    } catch (_) {}
+
+    try {
+      if (Hive.isBoxOpen('auth') && Hive.isBoxOpen('users')) {
+        final auth = Hive.box('auth');
+        final users = Hive.box('users');
+        final email = (auth.get('email') as String?) ?? '';
+        if (email.isNotEmpty && users.containsKey(email)) {
+          final user = users.get(email) as Map?;
+          final nameFromUser = (user == null) ? '' : ((user['name'] as String?) ?? '');
+          if (nameFromUser.trim().isNotEmpty) return nameFromUser.trim();
+        }
+      }
+    } catch (_) {}
+
+    return _profileName;
+  }
 
   @override
   void initState() {
@@ -61,23 +85,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
         curve: Curves.easeInOutCubic,
       );
     });
-      // Load profile name for personalized greetings (safe fallback)
-      try {
-        if (Hive.isBoxOpen('profile')) {
-          final box = Hive.box('profile');
-          final name = box.get('name', defaultValue: 'Farmer') as String;
-          _profileName = name.isNotEmpty ? name : 'Farmer';
-        }
-      } catch (_) {
-        _profileName = 'Farmer';
+    // Load profile name for personalized greetings (safe fallback).
+    // Check `profile` box first, then fall back to users via auth email.
+    try {
+      String resolved = 'Farmer';
+      if (Hive.isBoxOpen('profile')) {
+        final p = Hive.box('profile');
+        final n = (p.get('name') as String?) ?? '';
+        if (n.trim().isNotEmpty) resolved = n.trim();
       }
 
-      // Build welcome messages now that we have the profile name
+      // If still default, try to resolve from users via auth email
+      if (resolved == 'Farmer') {
+        if (Hive.isBoxOpen('auth') && Hive.isBoxOpen('users')) {
+          final auth = Hive.box('auth');
+          final users = Hive.box('users');
+          final email = (auth.get('email') as String?) ?? '';
+          if (email.isNotEmpty && users.containsKey(email)) {
+            final user = users.get(email) as Map?;
+            final nameFromUser = (user == null) ? '' : ((user['name'] as String?) ?? '');
+            if (nameFromUser.trim().isNotEmpty) resolved = nameFromUser.trim();
+          }
+        }
+      }
+
+      _profileName = resolved;
+
+      // Build welcome messages now that we have the profile name (use LocaleService)
       _welcomeMessages = [
-        'Welcome back, $_profileName! Check your farm status.',
-        'Tip: Keep water clean for healthier birds.',
-        'Reminder: Review vaccination schedule this week.',
+        LocaleService.instance.t('welcome_back_check', {'name': _profileName}),
+        LocaleService.instance.t('tip_water'),
+        LocaleService.instance.t('reminder_vaccination'),
       ];
+    } catch (_) {
+      _profileName = 'Farmer';
+      _welcomeMessages = [
+        LocaleService.instance.t('welcome_back_check', {'name': _profileName}),
+        LocaleService.instance.t('tip_water'),
+        LocaleService.instance.t('reminder_vaccination'),
+      ];
+    }
     // cycle welcome messages
     _messageTimer = Timer.periodic(const Duration(seconds: 3), (t) {
       if (!mounted) return;
@@ -100,10 +147,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
-        title: const Text(
-          "Poultry App",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: LocalizedText('welcome_app', style: const TextStyle(color: Colors.white)),
         actions: [
           // Notifications icon with badge showing pending reminders count
           ValueListenableBuilder(
@@ -163,11 +207,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: ValueListenableBuilder(
                   valueListenable: Hive.box('profile').listenable(),
                   builder: (context, Box profileBox, _) {
-                    final name = profileBox.get('name', defaultValue: _profileName) as String;
+                    final name = _getDisplayName(profileBox);
                     final messages = [
-                      'Welcome back, ${name.isNotEmpty ? name : _profileName}! Check your farm status.',
-                      'Tip: Keep water clean for healthier birds.',
-                      'Reminder: Review vaccination schedule this week.',
+                      LocaleService.instance.t('welcome_back_check', {'name': name.isNotEmpty ? name : _profileName}),
+                      LocaleService.instance.t('tip_water'),
+                      LocaleService.instance.t('reminder_vaccination'),
                     ];
                     final idx = messages.isNotEmpty ? (_messageIndex % messages.length) : 0;
                     return AnimatedSwitcher(
@@ -271,12 +315,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ValueListenableBuilder(
               valueListenable: Hive.box('profile').listenable(),
               builder: (context, Box profileBox, _) {
-                final name = profileBox.get('name', defaultValue: _profileName) as String;
+                final name = _getDisplayName(profileBox);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Welcome back, ${name.isNotEmpty ? name : _profileName}!',
+                    LocalizedText(
+                      'welcome_back_check',
+                      params: {'name': name.isNotEmpty ? name : _profileName},
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -284,10 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      'Manage your poultry farm efficiently',
-                      style: TextStyle(color: AppColors.textDark.withAlpha((0.7 * 255).round())),
-                    ),
+                    LocalizedText('manage_sub', style: TextStyle(color: AppColors.textDark.withAlpha((0.7 * 255).round()))),
                   ],
                 );
               },
@@ -317,7 +359,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final formatter = NumberFormat.decimalPattern();
                 return Row(
                   children: [
-                    Expanded(child: _buildStatCard("Total Birds", formatter.format(int.tryParse(totalBirds) ?? 0), Icons.egg)),
+                    Expanded(child: _buildStatCard(LocalizedText('total_birds'), formatter.format(int.tryParse(totalBirds) ?? 0), Icons.egg)),
                     const SizedBox(width: 12),
                     // Mortality: if a 'mortality' box exists use its length, else fallback
                     Expanded(
@@ -337,18 +379,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 // Show total birds dead as the main value, include flock count and record count in subtitle, and make card tappable
                                 final subtitle = "${deadFlocks.length} flocks · ${mortalityBox.length} records";
                                 return _buildStatCard(
-                                  "Mortality (${deadFlocks.length} flocks)",
+                                  LocalizedText('mortality_with_flocks', params: {'count': deadFlocks.length.toString()}),
                                   formatter.format(totalDeadBirds),
                                   Icons.warning_amber,
-                                  subtitle: subtitle,
-                                  tooltip: 'Tap to view mortality records',
+                                  subtitleWidget: Text(subtitle, style: TextStyle(fontSize: 12, color: AppColors.textDark.withAlpha((0.55 * 255).round()))),
+                                  tooltipKey: 'mortality_tooltip',
                                   onTap: () {
                                     Navigator.push(context, MaterialPageRoute(builder: (_) => const MortalityListScreen()));
                                   },
                                 );
                               },
                             )
-                          : _buildStatCard("Mortality", '0', Icons.warning_amber),
+                          : _buildStatCard(LocalizedText('mortality'), '0', Icons.warning_amber),
                     ),
                   ],
                 );
@@ -377,7 +419,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       }
                       eggsToday = sum.toString();
                     }
-                    return _buildStatCard("Eggs Today", eggsToday, Icons.emoji_food_beverage);
+                    return _buildStatCard(LocalizedText('eggs_today'), eggsToday, Icons.emoji_food_beverage);
                   }),
                 ),
                 const SizedBox(width: 12),
@@ -401,7 +443,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         final pct = (left / stockTotal * 100).round();
                         display = '$pct%';
                       }
-                      return _buildStatCard("Feed Left", display, Icons.inventory);
+                      return _buildStatCard(LocalizedText('feed_left'), display, Icons.inventory);
                     },
                   ),
                 ),
@@ -410,10 +452,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 30),
 
             // Section: Features
-            Text(
-              "Farm Tools",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark),
-            ),
+            LocalizedText('farm_tools', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark)),
             const SizedBox(height: 15),
 
             GridView.count(
@@ -424,7 +463,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisSpacing: 12,
               children: [
                 _buildFeatureCard(
-                  title: "Record Mortality",
+                  titleWidget: LocalizedText('record_mortality'),
                   icon: Icons.report,
                   onTap: () {
                     Navigator.push(
@@ -434,7 +473,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Record Eggs",
+                  titleWidget: LocalizedText('record_eggs'),
                   icon: Icons.egg_outlined,
                   onTap: () {
                     Navigator.push(
@@ -444,7 +483,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Feed Management",
+                  titleWidget: LocalizedText('feed_management'),
                   icon: Icons.inventory_2,
                   onTap: () {
                     Navigator.push(
@@ -454,28 +493,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Feeding Programs",
+                  titleWidget: LocalizedText('feeding_programs'),
                   icon: Icons.note_alt,
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const FeedingProgramsScreen()));
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Manage Flocks",
+                  titleWidget: LocalizedText('manage_flocks'),
                   icon: Icons.groups,
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const RecordFlockScreen()));
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Poultry Info",
+                  titleWidget: LocalizedText('poultry_info'),
                   icon: Icons.info_outline,
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const PoultryDetailsScreen()));
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Vaccination Schedule",
+                  titleWidget: LocalizedText('vaccination_schedule'),
                   icon: Icons.event_available,
                   onTap: () {
                     Navigator.push(
@@ -485,7 +524,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Marketplace",
+                  titleWidget: LocalizedText('marketplace'),
                   icon: Icons.money,
                   onTap: () {
                     Navigator.push(
@@ -496,7 +535,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 // Notifications card removed (accessible via quick actions / app bar)
                 _buildFeatureCard(
-                  title: "Growth Tracking",
+                  titleWidget: LocalizedText('growth_tracking'),
                   icon: Icons.show_chart,
                   onTap: () {
                     Navigator.push(
@@ -506,7 +545,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Tips",
+                  titleWidget: LocalizedText('tips'),
                   icon: Icons.lightbulb_outline,
                   onTap: () {
                     Navigator.push(
@@ -516,14 +555,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Saved Tips",
+                  titleWidget: LocalizedText('saved_tips'),
                   icon: Icons.bookmark_outline,
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const SavedTipsScreen()));
                   },
                 ),
                 _buildFeatureCard(
-                  title: "Settings",
+                  titleWidget: LocalizedText('settings'),
                   icon: Icons.settings_applications,
                   onTap: () {
                     Navigator.push(
@@ -548,8 +587,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // Quick Stats Card
-  Widget _buildStatCard(String title, String value, IconData icon, {String? subtitle, VoidCallback? onTap, String? tooltip}) {
-    Widget card = Container(
+  Widget _buildStatCard(Widget titleWidget, String value, IconData icon, {Widget? subtitleWidget, VoidCallback? onTap, String? tooltipKey}) {
+    return ValueListenableBuilder<String>(
+      valueListenable: LocaleService.instance.languageCode,
+      builder: (context, _, __) {
+        Widget card = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -569,8 +611,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, size: 28, color: AppColors.primary),
-              if (tooltip != null) Icon(Icons.info_outline, size: 18, color: AppColors.textDark.withAlpha(180)),
+                Icon(icon, size: 28, color: AppColors.primary),
+                if (tooltipKey != null) Icon(Icons.info_outline, size: 18, color: AppColors.textDark.withAlpha(180)),
             ],
           ),
           const SizedBox(height: 6),
@@ -583,38 +625,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            title,
+          DefaultTextStyle.merge(
             style: TextStyle(fontSize: 13, color: AppColors.textDark.withAlpha((0.7 * 255).round())),
+            child: titleWidget,
           ),
-          if (subtitle != null) ...[
+          if (subtitleWidget != null) ...[
             const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: TextStyle(fontSize: 12, color: AppColors.textDark.withAlpha((0.55 * 255).round())),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            Flexible(child: subtitleWidget),
           ],
         ],
       ),
     );
+        if (tooltipKey != null) {
+          final msg = LocaleService.instance.t(tooltipKey);
+          card = Tooltip(message: msg, child: card);
+        }
 
-    if (tooltip != null) {
-      card = Tooltip(message: tooltip, child: card);
-    }
+        if (onTap != null) {
+          return GestureDetector(onTap: onTap, child: SizedBox(height: 140, child: card));
+        }
 
-    if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: SizedBox(height: 140, child: card));
-    }
-
-    // Ensure all stat cards have a consistent height so the Mortality card
-    // matches the other quick-stat cards visually.
-    return SizedBox(height: 140, child: card);
+        // Ensure all stat cards have a consistent height so the Mortality card
+        // matches the other quick-stat cards visually.
+        return SizedBox(height: 140, child: card);
+      },
+    );
   }
 
   // Feature Card
-  Widget _buildFeatureCard({required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildFeatureCard({required Widget titleWidget, required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -635,10 +674,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Icon(icon, size: 40, color: AppColors.primary),
             const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
+            DefaultTextStyle.merge(
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              child: titleWidget,
             )
           ],
         ),
@@ -656,7 +694,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           const SizedBox(width: 4),
           _quickActionCard(
-            title: 'Mortality',
+            titleWidget: LocalizedText('mortality'),
             icon: Icons.report,
             color: AppColors.primary,
             onTap: () {
@@ -665,7 +703,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 12),
           _quickActionCard(
-            title: 'Add Feed',
+            titleWidget: LocalizedText('feed_management'),
             icon: Icons.inventory_2,
             color: AppColors.primary,
             onTap: () {
@@ -674,7 +712,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 12),
           _quickActionCard(
-            title: 'Notifications',
+            titleWidget: LocalizedText('notifications'),
             icon: Icons.notifications, 
             color: AppColors.primary,
             onTap: () {
@@ -684,7 +722,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 12),
           const SizedBox(width: 12),
           _quickActionCard(
-            title: 'Record Eggs',
+            titleWidget: LocalizedText('record_eggs'),
             icon: Icons.egg_outlined,
             color: AppColors.accent,
             onTap: () {
@@ -697,7 +735,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _quickActionCard({required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _quickActionCard({required Widget titleWidget, required IconData icon, required Color color, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -722,12 +760,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 8),
             Flexible(
-              child: Text(
-                title,
+              child: DefaultTextStyle.merge(
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                child: titleWidget,
               ),
             ),
           ],

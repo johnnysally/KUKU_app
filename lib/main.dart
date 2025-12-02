@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'screens/splash_screen.dart';
 import 'theme/theme_controller.dart';
+import 'services/locale_service.dart';
 import 'theme/colors.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   // Run the app inside a guarded zone so uncaught async errors can be captured.
@@ -26,6 +28,9 @@ void main() {
     // NotificationService will be initialized after pub get when available.
     await Hive.openBox('tips');
     await Hive.openBox('auth');
+
+    // Initialize locale service so app can read saved language
+    await LocaleService.instance.init();
 
     // Capture Flutter framework errors.
     FlutterError.onError = (FlutterErrorDetails details) {
@@ -63,11 +68,22 @@ class PoultryApp extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeController.instance.themeMode,
       builder: (context, mode, _) {
+        // Keep MaterialApp stable so changing language via LocaleService
+        // updates UI through LocalizedText without rebuilding the whole app.
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: _lightTheme(),
           darkTheme: _darkTheme(),
           themeMode: mode,
+          // Do not set key or listen to language changes here.
+          // Widgets that need to update listen to LocaleService directly.
+          locale: const Locale('en'),
+          supportedLocales: const [Locale('en'), Locale('sw')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           home: const SplashScreen(),
         );
       },

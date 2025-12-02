@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../theme/colors.dart';
 import '../services/api_config.dart';
+import '../widgets/ai_response_card.dart';
 
 class DiseaseDetectionScreen extends StatefulWidget {
   const DiseaseDetectionScreen({super.key});
@@ -271,30 +272,11 @@ class _DiseaseDetectionScreenState extends State<DiseaseDetectionScreen> {
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else if (_aiResult != null)
-              Card(
-                elevation: 4,
-                color: Colors.red.shade50,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: const [
-                          Icon(Icons.medical_information, color: Colors.red),
-                          SizedBox(width: 10),
-                          Text("AI Diagnosis", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      const Divider(height: 30),
-                      Text(
-                        _aiResult!,
-                        style: const TextStyle(fontSize: 16.5, height: 1.6),
-                      ),
-                    ],
-                  ),
-                ),
+              AIResponseCard(
+                title: 'AI Diagnosis',
+                content: _aiResult!,
+                icon: Icons.medical_information,
+                backgroundColor: Colors.red.shade50,
               ),
           ],
         ),

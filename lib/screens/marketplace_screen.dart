@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../theme/colors.dart';
 import '../services/api_config.dart';
+import '../widgets/ai_response_card.dart';
+import '../widgets/localized_text.dart';
+import '../services/locale_service.dart';
 
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
@@ -32,7 +35,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     final query = _queryController.text.trim();
     if (query.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please type your question")),
+        SnackBar(content: Text(LocaleService.instance.t('please_type_question'))),
       );
       return;
     }
@@ -53,7 +56,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
       final modelToUse = ApiConfig.isDefaultModelDecommissioned() ? ApiConfig.fastModel : ApiConfig.defaultModel;
       if (ApiConfig.isDefaultModelDecommissioned() && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Configured model is deprecated — using fallback model.')),
+          SnackBar(content: Text(LocaleService.instance.t('model_deprecated_msg'))),
         );
       }
 
@@ -94,12 +97,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         });
       } else {
         setState(() {
-          _aiResponse = "AI assistant is busy right now. Please try again in a moment.";
+          _aiResponse = LocaleService.instance.t('ai_busy_try_again');
         });
       }
     } catch (e) {
       setState(() {
-        _aiResponse = "No internet connection. Please check your network and try again.";
+        _aiResponse = LocaleService.instance.t('no_internet_try_again');
       });
     } finally {
       setState(() => _isLoading = false);
@@ -111,7 +114,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Marketplace", style: TextStyle(color: Colors.white)),
+        title: LocalizedText('marketplace_title', style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
@@ -121,14 +124,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Available Products",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
+              LocalizedText('available_products', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark)),
               const SizedBox(height: 16),
 
               // Product Cards
@@ -154,7 +150,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       ),
                       trailing: ElevatedButton.icon(
                         icon: const Icon(Icons.message, size: 18),
-                        label: const Text("Contact"),
+                        label: LocalizedText('contact'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -164,7 +160,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text("Contacting seller for ${p['name']}..."),
+                              content: Text(LocaleService.instance.t('contacting_seller', {'name': p['name']})),
                               backgroundColor: AppColors.primary,
                             ),
                           );
@@ -176,19 +172,9 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               const SizedBox(height: 40),
 
               // AI Assistant Section
-              const Text(
-                "AI Marketplace Assistant",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
+              LocalizedText('ai_marketplace_title', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)),
               const SizedBox(height: 8),
-              Text(
-                "Ask about prices, best selling time, transport, buyers, or anything!",
-                style: TextStyle(color: Colors.grey[600], fontSize: 15),
-              ),
+              Text(LocaleService.instance.t('ai_marketplace_hint'), style: TextStyle(color: Colors.grey[600], fontSize: 15)),
               const SizedBox(height: 16),
 
               // Query Input
@@ -200,7 +186,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.cardBackground,
-                  hintText: "e.g. What is a good price for broilers in Nairobi today?",
+                  hintText: LocaleService.instance.t('marketplace_hint_example'),
                   hintStyle: TextStyle(color: Colors.grey[500]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -231,35 +217,13 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   child: CircularProgressIndicator(color: AppColors.primary),
                 )
               else if (_aiResponse != null)
-                Card(
-                  elevation: 4,
-                  color: Colors.amber.shade50,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: AppColors.primary, width: 1.5),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: const [
-                            Icon(Icons.smart_toy, color: AppColors.primary),
-                            SizedBox(width: 8),
-                            Text(
-                              "AI Assistant Reply",
-                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 20),
-                        Text(
-                          _aiResponse!,
-                          style: const TextStyle(fontSize: 16, height: 1.6, color: AppColors.textDark),
-                        ),
-                      ],
-                    ),
+                ValueListenableBuilder(
+                  valueListenable: LocaleService.instance.languageCode,
+                  builder: (_, __, ___) => AIResponseCard(
+                    title: LocaleService.instance.t('ai_assistant_reply'),
+                    content: _aiResponse!,
+                    icon: Icons.smart_toy,
+                    backgroundColor: Colors.amber.shade50,
                   ),
                 ),
 

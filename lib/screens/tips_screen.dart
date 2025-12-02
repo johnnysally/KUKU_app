@@ -6,6 +6,9 @@ import 'package:http/http.dart' as http;
 import 'package:hive_flutter/hive_flutter.dart';
 import '../theme/colors.dart';
 import '../services/api_config.dart';
+import '../widgets/ai_response_card.dart';
+import '../widgets/localized_text.dart';
+import '../services/locale_service.dart';
 
 class TipsScreen extends StatefulWidget {
   const TipsScreen({super.key});
@@ -19,13 +22,7 @@ class _TipsScreenState extends State<TipsScreen> {
   bool _isLoading = false;
   String? _aiTip;
 
-  final List<String> generalTips = [
-    "Maintain clean drinking water for your birds daily.",
-    "Separate sick birds immediately to prevent disease spread.",
-    "Ensure proper ventilation in poultry houses.",
-    "Provide balanced feed according to bird age.",
-    "Regularly check for parasites and vaccinate on schedule.",
-  ];
+  List<String> get generalTips => LocaleService.instance.t('general_tips_bullets').split('\n');
 
   Future<void> _getAITip() async {
     final question = _questionController.text.trim();
@@ -34,7 +31,7 @@ class _TipsScreenState extends State<TipsScreen> {
     // Safety check - remind developer if key not passed
     if (ApiConfig.apiKey.isEmpty || ApiConfig.apiKey == 'YOUR_KEY_NOT_SET') {
       setState(() {
-        _aiTip = "Error: Missing Groq API key!\n\nRun with:\nflutter run --dart-define=GROQ_API_KEY=gsk_...";
+        _aiTip = LocaleService.instance.t('api_key_missing');
       });
       return;
     }
@@ -48,7 +45,7 @@ class _TipsScreenState extends State<TipsScreen> {
       final modelToUse = ApiConfig.isDefaultModelDecommissioned() ? ApiConfig.fastModel : ApiConfig.defaultModel;
       if (ApiConfig.isDefaultModelDecommissioned() && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Configured model is deprecated — using fallback model.')),
+          SnackBar(content: Text(LocaleService.instance.t('model_deprecated_msg'))),
         );
       }
 
@@ -107,7 +104,7 @@ class _TipsScreenState extends State<TipsScreen> {
       'tip': _aiTip,
       'savedAt': DateTime.now().toIso8601String(),
     });
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tip saved')));
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(LocaleService.instance.t('tip_saved'))));
   }
 
   @override
@@ -115,7 +112,7 @@ class _TipsScreenState extends State<TipsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Tips & Advice", style: TextStyle(color: Colors.white)),
+        title: LocalizedText('tips_title', style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
@@ -125,10 +122,7 @@ class _TipsScreenState extends State<TipsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "General Tips",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
-              ),
+              LocalizedText('general_tips_bullets', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)),
               const SizedBox(height: 10),
               ...generalTips.map(
                 (tip) => Card(
@@ -141,16 +135,13 @@ class _TipsScreenState extends State<TipsScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              const Text(
-                "Ask AI for Personalized Advice",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark),
-              ),
+              LocalizedText('ask_ai_personalized', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark)),
               const SizedBox(height: 10),
               TextField(
                 controller: _questionController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: "E.g. How to improve egg production this season?",
+                  hintText: LocaleService.instance.t('tip_hint_example'),
                   filled: true,
                   fillColor: AppColors.cardBackground,
                   border: OutlineInputBorder(
@@ -171,32 +162,27 @@ class _TipsScreenState extends State<TipsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentLight,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primary, width: 1.5),
-                      ),
-                      child: Text(
-                        _aiTip!,
-                        style: const TextStyle(fontSize: 16, height: 1.5, color: AppColors.textDark),
+                    ValueListenableBuilder(
+                      valueListenable: LocaleService.instance.languageCode,
+                      builder: (_, __, ___) => AIResponseCard(
+                        title: LocaleService.instance.t('ai_tip_title'),
+                        content: _aiTip!,
+                        icon: Icons.lightbulb_outline,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         ElevatedButton.icon(
                           onPressed: _saveTip,
                           icon: const Icon(Icons.save_alt),
-                          label: const Text('Save Tip'),
+                          label: LocalizedText('save_tip'),
                           style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
                         ),
                         const SizedBox(width: 12),
                         OutlinedButton(
                           onPressed: () => setState(() => _aiTip = null),
-                          child: const Text('Dismiss'),
+                          child: LocalizedText('dismiss'),
                         ),
                       ],
                     ),

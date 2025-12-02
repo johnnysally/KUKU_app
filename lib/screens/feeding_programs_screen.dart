@@ -1,6 +1,7 @@
 // lib/screens/feeding_programs_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../theme/colors.dart';
 
@@ -42,14 +43,14 @@ class FeedingProgramsScreen extends StatelessWidget {
                     title: Text(preview, maxLines: 2, overflow: TextOverflow.ellipsis),
                     subtitle: Text(meta, style: TextStyle(color: AppColors.textDark.withAlpha(160))),
                     onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('Feeding Program'),
-                          content: SingleChildScrollView(child: Text(item['program'] ?? '')),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
-                          ],
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProgramDetailScreen(
+                            title: 'Feeding Program',
+                            meta: meta,
+                            program: item['program'] ?? '',
+                          ),
                         ),
                       );
                     },
@@ -66,6 +67,80 @@ class FeedingProgramsScreen extends StatelessWidget {
               },
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class ProgramDetailScreen extends StatelessWidget {
+  final String title;
+  final String meta;
+  final String program;
+
+  const ProgramDetailScreen({
+    super.key,
+    required this.title,
+    required this.meta,
+    required this.program,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: AppColors.primary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.copy),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: program));
+              if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Copied to clipboard')));
+            },
+            tooltip: 'Copy',
+          ),
+        ],
+      ),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(meta, style: TextStyle(color: AppColors.textDark.withAlpha(180), fontSize: 14)),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      program,
+                      style: const TextStyle(fontSize: 18, height: 1.7, color: AppColors.textDark),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.close),
+                  label: const Text('Close'),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

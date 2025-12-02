@@ -4,6 +4,7 @@ import 'signup_screen.dart';
 import 'dashboard_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/colors.dart';
+import '../widgets/localized_text.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -53,6 +54,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Persist login state for auto-login
     await AuthService.instance.login(email);
+    // Persist profile info for greeting
+    try {
+          if (Hive.isBoxOpen('users') && Hive.isBoxOpen('profile')) {
+        final user = usersBox.get(email) as Map?;
+        if (user != null) {
+          final profile = Hive.box('profile');
+          final name = (user['name'] as String?) ?? '';
+          if (name.isNotEmpty) profile.put('name', name);
+          profile.put('email', email);
+        }
+      }
+    } catch (_) {}
     if (!mounted) return;
 
     // Login successful - navigate to dashboard
@@ -73,8 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // App Title
-              Text(
-                "Welcome Back",
+              LocalizedText(
+                'welcome_title',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 30,
@@ -83,8 +96,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
-                "Login to manage your poultry farm efficiently.",
+              LocalizedText(
+                'login_sub',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -100,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.card,
-                  labelText: "Email Address",
+                  label: LocalizedText('email_address', style: const TextStyle()),
                   prefixIcon: const Icon(Icons.email, color: AppColors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
@@ -117,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.card,
-                  labelText: "Password",
+                  label: LocalizedText('password', style: const TextStyle()),
                   prefixIcon: const Icon(Icons.lock, color: AppColors.primary),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -148,20 +161,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 onPressed: login,
-                child: const Text(
-                  "Login",
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: LocalizedText('login', style: const TextStyle(fontSize: 18)),
               ),
               const SizedBox(height: 15),
 
               // Forgot Password
               TextButton(
                 onPressed: () {},
-                child: Text(
-                  "Forgot Password?",
-                  style: TextStyle(color: AppColors.primary),
-                ),
+                child: LocalizedText('forgot_password', style: TextStyle(color: AppColors.primary)),
               ),
               const SizedBox(height: 15),
 
@@ -169,8 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account?",
-                      style: TextStyle(color: AppColors.textDark)),
+                    LocalizedText('dont_have_account', style: TextStyle(color: AppColors.textDark)),
                   TextButton(
                     onPressed: () {
                       Navigator.pushReplacement(
@@ -179,12 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             builder: (context) => const SignupScreen()),
                       );
                     },
-                    child: Text(
-                      "Register",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary),
-                    ),
+                    child: LocalizedText('register', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
                   ),
                 ],
               )

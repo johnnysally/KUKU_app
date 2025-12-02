@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import '../theme/colors.dart';
+import '../services/locale_service.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -14,21 +15,18 @@ class OnboardingScreen extends StatelessWidget {
           PageView(
             children: [
               buildPage(
-                title: 'Welcome to Poultry App',
-                description:
-                    'Manage your poultry farm efficiently and track your flock in real time.',
+                title: LocaleService.instance.t('onboard_title_1'),
+                description: LocaleService.instance.t('onboard_desc_1'),
                 color: AppColors.primaryLight,
               ),
               buildPage(
-                title: 'Track Your Flock',
-                description:
-                    'Monitor growth, feed schedules, weight, and health records.',
+                title: LocaleService.instance.t('onboard_title_2'),
+                description: LocaleService.instance.t('onboard_desc_2'),
                 color: AppColors.secondaryLight,
               ),
               buildPage(
-                title: 'Boost Production',
-                description:
-                    'Access insights to improve egg and meat production on your farm.',
+                title: LocaleService.instance.t('onboard_title_3'),
+                description: LocaleService.instance.t('onboard_desc_3'),
                 color: AppColors.accent,
               ),
             ],
@@ -57,9 +55,9 @@ class OnboardingScreen extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text(
-                  "Get Started",
-                  style: TextStyle(fontSize: 18),
+                child: Text(
+                  LocaleService.instance.t('get_started'),
+                  style: const TextStyle(fontSize: 18),
                 ),
               ),
             ),

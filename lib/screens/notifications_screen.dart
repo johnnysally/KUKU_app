@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../services/notification_service.dart';
 import '../theme/colors.dart';
+import '../widgets/localized_text.dart';
+import '../services/locale_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -52,7 +54,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _schedule() async {
     if (_titleController.text.trim().isEmpty || _scheduled == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter title and schedule time')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(LocaleService.instance.t('enter_title_and_schedule_time'))));
       return;
     }
     final id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
@@ -67,7 +69,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       'scheduledAt': _scheduled!.toIso8601String(),
     });
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Reminder scheduled')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(LocaleService.instance.t('reminder_scheduled'))));
     setState(() {
       _titleController.clear();
       _bodyController.clear();
@@ -87,7 +89,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final df = DateFormat.yMMMd().add_jm();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: LocalizedText('notifications', style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
       ),
       backgroundColor: AppColors.background,
@@ -98,25 +100,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: InputDecoration(labelText: 'Title', filled: true, fillColor: AppColors.cardBackground),
+              decoration: InputDecoration(label: LocalizedText('notification_title'), filled: true, fillColor: AppColors.cardBackground),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _bodyController,
-              decoration: InputDecoration(labelText: 'Body (optional)', filled: true, fillColor: AppColors.cardBackground),
+              decoration: InputDecoration(label: LocalizedText('notification_body_optional'), filled: true, fillColor: AppColors.cardBackground),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    _scheduled == null ? 'No time selected' : df.format(_scheduled!),
-                    style: TextStyle(color: AppColors.textDark),
-                  ),
+                  child: _scheduled == null
+                      ? LocalizedText('no_time_selected', style: TextStyle(color: AppColors.textDark))
+                      : Text(df.format(_scheduled!), style: TextStyle(color: AppColors.textDark)),
                 ),
                 ElevatedButton(
                   onPressed: _pickDateTime,
-                  child: const Text('Pick'),
+                  child: LocalizedText('pick'),
                 ),
               ],
             ),
@@ -124,16 +125,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ElevatedButton(
               onPressed: _schedule,
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: Text('Schedule Reminder')),
+              child: const Padding(padding: EdgeInsets.symmetric(vertical: 12), child: LocalizedText('schedule_reminder')),
             ),
             const SizedBox(height: 20),
-            const Text('Scheduled Reminders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            LocalizedText('scheduled_reminders', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Expanded(
               child: ValueListenableBuilder(
                 valueListenable: _notifBox.listenable(),
                 builder: (context, box, _) {
-                  if (_notifBox.isEmpty) return Center(child: Text('No reminders', style: TextStyle(color: AppColors.textDark)));
+                  if (_notifBox.isEmpty) return Center(child: LocalizedText('no_reminders', style: TextStyle(color: AppColors.textDark)));
                   return ListView.builder(
                     itemCount: _notifBox.length,
                     itemBuilder: (context, index) {

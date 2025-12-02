@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../services/auth_service.dart';
+import '../services/locale_service.dart';
 import 'login_screen.dart';
 import 'change_pin_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -44,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Settings", style: TextStyle(color: Colors.white)),
+        title: Text(LocaleService.instance.t('settings_title'), style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primary,
         elevation: 0,
       ),
@@ -54,9 +55,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Settings
-            const Text(
-              "Profile Settings",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            Text(
+              LocaleService.instance.t('settings_title'),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
             ),
             const SizedBox(height: 15),
 
@@ -64,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: "Farmer Name",
+                labelText: LocaleService.instance.t('farmer_name'),
                 filled: true,
                 fillColor: AppColors.cardBackground,
                 border: OutlineInputBorder(
@@ -79,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextField(
               controller: _farmController,
               decoration: InputDecoration(
-                labelText: "Farm Name",
+                labelText: LocaleService.instance.t('farm_name'),
                 filled: true,
                 fillColor: AppColors.cardBackground,
                 border: OutlineInputBorder(
@@ -88,18 +89,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            // Language selector
+            Text(
+              LocaleService.instance.t('language'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ValueListenableBuilder<String>(
+              valueListenable: LocaleService.instance.languageCode,
+              builder: (context, currentLang, _) {
+                return Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: Text(LocaleService.instance.t('english')),
+                        value: 'en',
+                        groupValue: currentLang,
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() {
+                            _profileBox.put('language', v);
+                            LocaleService.instance.setLanguage(v);
+                          });
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: Text(LocaleService.instance.t('swahili')),
+                        value: 'sw',
+                        groupValue: currentLang,
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() {
+                            _profileBox.put('language', v);
+                            LocaleService.instance.setLanguage(v);
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
             const SizedBox(height: 25),
 
             // Preferences
-            const Text(
-              "Preferences",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            Text(
+              LocaleService.instance.t('preferences'),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
             ),
             const SizedBox(height: 15),
 
             // Notifications toggle
             SwitchListTile(
-              title: const Text("Enable Notifications"),
+              title: Text(LocaleService.instance.t('enable_notifications')),
               value: _notificationsEnabled,
               activeColor: AppColors.primary,
               onChanged: (value) => setState(() => _notificationsEnabled = value),
@@ -108,15 +153,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 25),
 
             // Security
-            const Text(
-              "Security",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            Text(
+              LocaleService.instance.t('security'),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
             ),
             const SizedBox(height: 15),
 
             ListTile(
               leading: const Icon(Icons.lock, color: AppColors.textDark),
-              title: const Text("Change App PIN", style: TextStyle(color: AppColors.textDark)),
+              title: Text(LocaleService.instance.t('change_app_pin'), style: const TextStyle(color: AppColors.textDark)),
               trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.textDark),
               onTap: () {
                 Navigator.push(
@@ -129,13 +174,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 25),
 
             // Notification Sounds
-            const Text(
-              "Notification Sounds",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            Text(
+              LocaleService.instance.t('notification_sounds'),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
             ),
             const SizedBox(height: 8),
             RadioListTile<String>(
-              title: const Text('Chime'),
+              title: Text(LocaleService.instance.t('sound_chime')),
               value: 'chime',
               groupValue: _selectedNotificationSound,
               activeColor: AppColors.primary,
@@ -148,7 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             RadioListTile<String>(
-              title: const Text('Bell'),
+              title: Text(LocaleService.instance.t('sound_bell')),
               value: 'bell',
               groupValue: _selectedNotificationSound,
               activeColor: AppColors.primary,
@@ -160,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             RadioListTile<String>(
-              title: const Text('Beep'),
+              title: Text(LocaleService.instance.t('sound_beep')),
               value: 'beep',
               groupValue: _selectedNotificationSound,
               activeColor: AppColors.primary,
@@ -172,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             RadioListTile<String>(
-              title: const Text('Melody'),
+              title: Text(LocaleService.instance.t('sound_melody')),
               value: 'melody',
               groupValue: _selectedNotificationSound,
               activeColor: AppColors.primary,
@@ -184,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             RadioListTile<String>(
-              title: const Text('Alarm'),
+              title: Text(LocaleService.instance.t('sound_alarm')),
               value: 'alarm',
               groupValue: _selectedNotificationSound,
               activeColor: AppColors.primary,
@@ -196,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
             RadioListTile<String>(
-              title: const Text('Note'),
+              title: Text(LocaleService.instance.t('sound_note')),
               value: 'note',
               groupValue: _selectedNotificationSound,
               activeColor: AppColors.primary,
@@ -221,18 +266,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 onPressed: () {
                   // Save settings to local Hive profile box
-                  _profileBox.put('name', _nameController.text.trim());
-                  _profileBox.put('farm', _farmController.text.trim());
-                  _profileBox.put('notificationsEnabled', _notificationsEnabled);
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Settings saved successfully")),
-                  );
+                    _profileBox.put('name', _nameController.text.trim());
+                    _profileBox.put('farm', _farmController.text.trim());
+                    _profileBox.put('notificationsEnabled', _notificationsEnabled);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(LocaleService.instance.t('save_success'))),
+                    );
                 },
-                child: const Text(
-                  "Save Settings",
-                  style: TextStyle(fontSize: 18, color: AppColors.accent),
-                ),
+                  child: Text(
+                    LocaleService.instance.t('save_settings'),
+                    style: const TextStyle(fontSize: 18, color: AppColors.accent),
+                  ),
               ),
             ),
             const SizedBox(height: 16),
@@ -240,10 +285,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ListTile(
               leading: const Icon(Icons.person, color: AppColors.textDark),
               title: Text(
-                AuthService.instance.currentUserEmail() ?? 'Not signed in',
+                AuthService.instance.currentUserEmail() ?? LocaleService.instance.t('not_signed_in'),
                 style: const TextStyle(color: AppColors.textDark),
               ),
-              subtitle: const Text('Account', style: TextStyle(color: AppColors.textDark)),
+              subtitle: Text(LocaleService.instance.t('account'), style: const TextStyle(color: AppColors.textDark)),
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -263,7 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     (route) => false,
                   );
                 },
-                child: const Text('Logout'),
+                child: Text(LocaleService.instance.t('logout')),
               ),
             ),
           ],

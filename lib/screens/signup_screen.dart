@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'login_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/colors.dart';
+import '../widgets/localized_text.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -63,6 +64,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
     // Auto-login the new user
     await AuthService.instance.login(email);
+    // Persist basic profile info so dashboard greeting and auto-login show name
+    try {
+      if (Hive.isBoxOpen('profile')) {
+        final profile = Hive.box('profile');
+        profile.put('name', name);
+        profile.put('email', email);
+      }
+    } catch (_) {}
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -85,8 +94,8 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                "Create Account",
+              LocalizedText(
+                'create_account',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
@@ -95,8 +104,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
-                "Sign up to start managing your poultry farm.",
+              LocalizedText(
+                'signup_sub',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -112,7 +121,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.card,
-                  labelText: "Full Name",
+                  label: LocalizedText('full_name', style: const TextStyle()),
                   prefixIcon: const Icon(Icons.person, color: AppColors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
@@ -128,7 +137,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.card,
-                  labelText: "Email Address",
+                  label: LocalizedText('email_address', style: const TextStyle()),
                   prefixIcon: const Icon(Icons.email, color: AppColors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
@@ -145,7 +154,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.card,
-                  labelText: "Password",
+                  label: LocalizedText('password', style: const TextStyle()),
                   prefixIcon: const Icon(Icons.lock, color: AppColors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
@@ -162,7 +171,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: AppColors.card,
-                  labelText: "Confirm Password",
+                  label: LocalizedText('confirm_password', style: const TextStyle()),
                   prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primary),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
@@ -182,7 +191,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 onPressed: signup,
-                child: const Text("Sign Up", style: TextStyle(fontSize: 18)),
+                child: LocalizedText('sign_up', style: const TextStyle(fontSize: 18)),
               ),
               const SizedBox(height: 20),
 
@@ -190,7 +199,7 @@ class _SignupScreenState extends State<SignupScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Already have an account?",
+                  const Text("Already have an account?",
                       style: TextStyle(color: AppColors.textDark)),
                   TextButton(
                     onPressed: () {
